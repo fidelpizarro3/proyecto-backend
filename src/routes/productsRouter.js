@@ -4,109 +4,106 @@ import path from 'path';
 
 const router = express.Router();
 
-// Definimos las rutas explícitas a los archivos JSON
+// Rutas explícitas a los archivos JSON
 const productosFilePath = path.join(process.cwd(), 'src', 'public', 'productos.json');
-const carritoFilePath = path.join(process.cwd(), 'src', 'public', 'carrito.json');
+
+// Leer y parsear JSON con manejo de errores
+const readJSON = (filePath) => {
+  try {
+    const data = fs.readFileSync(filePath, 'utf-8');
+    return JSON.parse(data);
+  } catch (err) {
+    throw new Error('Error al leer o parsear el archivo JSON');
+  }
+};
+
+// Guardar JSON con manejo de errores
+const writeJSON = (filePath, data) => {
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+  } catch (err) {
+    throw new Error('Error al guardar el archivo JSON');
+  }
+};
+
+// Generar un ID único basado en el contenido del archivo
+const generateUniqueId = (products) => {
+  const ids = products.map((p) => Number(p.id));
+  return (Math.max(...ids, 0) + 1).toString();
+};
 
 // Ruta GET /api/products/
 router.get('/', (req, res) => {
-  const limit = req.query.limit ? parseInt(req.query.limit) : 0;
-  fs.readFile(productosFilePath, 'utf-8', (err, data) => {
-    if (err) return res.status(500).json({ error: 'Error leyendo los productos' });
-
-    const products = JSON.parse(data);
-    if (limit) {
-      return res.json(products.slice(0, limit));
-    }
-    res.json(products);
-  });
+  try {
+    const products = readJSON(productosFilePath);
+    const limit = parseInt(req.query.limit) || products.length;
+    res.json(products.slice(0, limit));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Ruta GET /api/products/:pid
 router.get('/:pid', (req, res) => {
-  const { pid } = req.params;
-  fs.readFile(productosFilePath, 'utf-8', (err, data) => {
-    if (err) return res.status(500).json({ error: 'Error leyendo los productos' });
-
-    const products = JSON.parse(data);
-    const product = products.find(p => p.id == pid);
-    if (product) {
-      return res.json(product);
-    }
-    res.status(404).json({ error: 'Producto no encontrado' });
-  });
+  try {
+    const products = readJSON(productosFilePath);
+    const product = products.find((p) => p.id === req.params.pid.toString());
+    if (!product) return res.status(404).json({ error: 'Producto no encontrado' });
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Ruta POST /api/products/
 router.post('/', (req, res) => {
-  const { title, description, code, price, status = true, stock, category, thumbnails = [] } = req.body;
-  fs.readFile(productosFilePath, 'utf-8', (err, data) => {
-    if (err) return res.status(500).json({ error: 'Error leyendo los productos' });
-
-    const products = JSON.parse(data);
+  try {
+    const products = readJSON(productosFilePath);
     const newProduct = {
-      id: Date.now(), // Usamos Date.now() como id único
-      title,
-      description,
-      code,
-      price,
-      status,
-      stock,
-      category,
-      thumbnails,
+      id: generateUniqueId(products),
+      ...req.body,
+      status: req.body.status ?? true,
+      thumbnails: req.body.thumbnails ?? [],
     };
-
     products.push(newProduct);
-    fs.writeFile(productosFilePath, JSON.stringify(products), err => {
-      if (err) return res.status(500).json({ error: 'Error guardando el producto' });
-
-      res.status(201).json(newProduct);
-    });
-  });
+    writeJSON(productosFilePath, products);
+    res.status(201).json(newProduct);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Ruta PUT /api/products/:pid
 router.put('/:pid', (req, res) => {
-  const { pid } = req.params;
-  const { title, description, code, price, status, stock, category, thumbnails } = req.body;
-  fs.readFile(productosFilePath, 'utf-8', (err, data) => {
-    if (err) return res.status(500).json({ error: 'Error leyendo los productos' });
+  try {
+    const products = readJSON(productosFilePath);
+    const index = products.findIndex((p) => p.id === req.params.pid.toString());
+    if (index === -1) return res.status(404).json({ error: 'Producto no encontrado' });
 
-    const products = JSON.parse(data);
-    const productIndex = products.findIndex(p => p.id == pid);
-    if (productIndex === -1) return res.status(404).json({ error: 'Producto no encontrado' });
-
-    const updatedProduct = {
-      ...products[productIndex],
-      title, description, code, price, status, stock, category, thumbnails
-    };
-
-    products[productIndex] = updatedProduct;
-    fs.writeFile(productosFilePath, JSON.stringify(products), err => {
-      if (err) return res.status(500).json({ error: 'Error actualizando el producto' });
-
-      res.json(updatedProduct);
-    });
-  });
+    products[index] = { ...products[index], ...req.body };
+    writeJSON(productosFilePath, products);
+    res.json(products[index]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Ruta DELETE /api/products/:pid
 router.delete('/:pid', (req, res) => {
-  const { pid } = req.params;
-  fs.readFile(productosFilePath, 'utf-8', (err, data) => {
-    if (err) return res.status(500).json({ error: 'Error leyendo los productos' });
+  try {
+    let products = readJSON(productosFilePath);
+    const initialLength = products.length;
+    products = products.filter((p) => p.id !== req.params.pid.toString());
 
-    let products = JSON.parse(data);
-    const productIndex = products.findIndex(p => p.id == pid);
-    if (productIndex === -1) return res.status(404).json({ error: 'Producto no encontrado' });
+    if (products.length === initialLength) {
+      return res.status(404).json({ error: 'Producto no encontrado' });
+    }
 
-    products = products.filter(p => p.id != pid);
-    fs.writeFile(productosFilePath, JSON.stringify(products), err => {
-      if (err) return res.status(500).json({ error: 'Error eliminando el producto' });
-
-      res.status(204).send();
-    });
-  });
+    writeJSON(productosFilePath, products);
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 export default router;

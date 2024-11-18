@@ -3,67 +3,70 @@ import fs from 'fs';
 import path from 'path';
 
 const router = express.Router();
+const carritoFilePath = path.join(process.cwd(), 'src', 'public', 'carrito.json');
+
+// Funciones auxiliares
+const readJSON = (filePath) => {
+  try {
+    const data = fs.readFileSync(filePath, 'utf-8');
+    return JSON.parse(data);
+  } catch (err) {
+    throw new Error('Error al leer o parsear el archivo JSON');
+  }
+};
+
+const writeJSON = (filePath, data) => {
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+  } catch (err) {
+    throw new Error('Error al guardar el archivo JSON');
+  }
+};
 
 // Ruta POST /api/carts/
 router.post('/', (req, res) => {
-  const newCart = {
-    id: Date.now(),
-    products: []
-  };
-
-  fs.readFile(path.join(__dirname, '..', '..', 'carrito.json'), 'utf-8', (err, data) => {
-    if (err) return res.status(500).json({ error: 'Error leyendo los carritos' });
-
-    const carts = JSON.parse(data);
+  try {
+    const carts = readJSON(carritoFilePath);
+    const newCart = { id: Date.now().toString(), products: [] };
     carts.push(newCart);
-    fs.writeFile(path.join(__dirname, '..', '..', 'carrito.json'), JSON.stringify(carts), err => {
-      if (err) return res.status(500).json({ error: 'Error guardando el carrito' });
-
-      res.status(201).json(newCart);
-    });
-  });
+    writeJSON(carritoFilePath, carts);
+    res.status(201).json(newCart);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Ruta GET /api/carts/:cid
 router.get('/:cid', (req, res) => {
-  const { cid } = req.params;
-  fs.readFile(path.join(__dirname, '..', '..', 'carrito.json'), 'utf-8', (err, data) => {
-    if (err) return res.status(500).json({ error: 'Error leyendo los carritos' });
-
-    const carts = JSON.parse(data);
-    const cart = carts.find(c => c.id == cid);
-    if (cart) {
-      return res.json(cart.products);
-    }
-    res.status(404).json({ error: 'Carrito no encontrado' });
-  });
+  try {
+    const carts = readJSON(carritoFilePath);
+    const cart = carts.find((c) => c.id === req.params.cid.toString());
+    if (!cart) return res.status(404).json({ error: 'Carrito no encontrado' });
+    res.json(cart.products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Ruta POST /api/carts/:cid/product/:pid
 router.post('/:cid/product/:pid', (req, res) => {
-  const { cid, pid } = req.params;
-  const quantity = 1;
-
-  fs.readFile(path.join(__dirname, '..', '..', 'carrito.json'), 'utf-8', (err, data) => {
-    if (err) return res.status(500).json({ error: 'Error leyendo los carritos' });
-
-    const carts = JSON.parse(data);
-    const cart = carts.find(c => c.id == cid);
+  try {
+    const carts = readJSON(carritoFilePath);
+    const cart = carts.find((c) => c.id === req.params.cid.toString());
     if (!cart) return res.status(404).json({ error: 'Carrito no encontrado' });
 
-    const existingProduct = cart.products.find(p => p.product == pid);
-    if (existingProduct) {
-      existingProduct.quantity += quantity;
+    const product = cart.products.find((p) => p.product === req.params.pid.toString());
+    if (product) {
+      product.quantity += 1;
     } else {
-      cart.products.push({ product: pid, quantity });
+      cart.products.push({ product: req.params.pid.toString(), quantity: 1 });
     }
 
-    fs.writeFile(path.join(__dirname, '..', '..', 'carrito.json'), JSON.stringify(carts), err => {
-      if (err) return res.status(500).json({ error: 'Error actualizando el carrito' });
-
-      res.status(201).json(cart);
-    });
-  });
+    writeJSON(carritoFilePath, carts);
+    res.status(201).json(cart);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 export default router;
