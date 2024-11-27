@@ -3,11 +3,9 @@ import fs from 'fs';
 import path from 'path';
 
 const router = express.Router();
-
-// Rutas explícitas a los archivos JSON
 const productosFilePath = path.join(process.cwd(), 'src', 'public', 'productos.json');
 
-// Leer y parsear JSON con manejo de errores
+// Funciones auxiliares
 const readJSON = (filePath) => {
   try {
     const data = fs.readFileSync(filePath, 'utf-8');
@@ -17,7 +15,6 @@ const readJSON = (filePath) => {
   }
 };
 
-// Guardar JSON con manejo de errores
 const writeJSON = (filePath, data) => {
   try {
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
@@ -26,7 +23,6 @@ const writeJSON = (filePath, data) => {
   }
 };
 
-// Generar un ID único basado en el contenido del archivo
 const generateUniqueId = (products) => {
   const ids = products.map((p) => Number(p.id));
   return (Math.max(...ids, 0) + 1).toString();
@@ -47,13 +43,14 @@ router.get('/', (req, res) => {
 router.get('/:pid', (req, res) => {
   try {
     const products = readJSON(productosFilePath);
-    const product = products.find((p) => p.id === req.params.pid.toString());
+    const product = products.find((p) => p.id.toString() === req.params.pid.toString());
     if (!product) return res.status(404).json({ error: 'Producto no encontrado' });
     res.json(product);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // Ruta POST /api/products/
 router.post('/', (req, res) => {
@@ -77,7 +74,7 @@ router.post('/', (req, res) => {
 router.put('/:pid', (req, res) => {
   try {
     const products = readJSON(productosFilePath);
-    const index = products.findIndex((p) => p.id === req.params.pid.toString());
+    const index = products.findIndex((p) => String(p.id) === String(req.params.pid));
     if (index === -1) return res.status(404).json({ error: 'Producto no encontrado' });
 
     products[index] = { ...products[index], ...req.body };
@@ -93,7 +90,7 @@ router.delete('/:pid', (req, res) => {
   try {
     let products = readJSON(productosFilePath);
     const initialLength = products.length;
-    products = products.filter((p) => p.id !== req.params.pid.toString());
+    products = products.filter((p) => String(p.id) !== String(req.params.pid));
 
     if (products.length === initialLength) {
       return res.status(404).json({ error: 'Producto no encontrado' });
