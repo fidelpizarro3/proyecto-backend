@@ -39,19 +39,6 @@ router.get('/', (req, res) => {
   }
 });
 
-// Ruta GET /api/products/:pid
-router.get('/:pid', (req, res) => {
-  try {
-    const products = readJSON(productosFilePath);
-    const product = products.find((p) => p.id.toString() === req.params.pid.toString());
-    if (!product) return res.status(404).json({ error: 'Producto no encontrado' });
-    res.json(product);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-
 // Ruta POST /api/products/
 router.post('/', (req, res) => {
   try {
@@ -64,22 +51,13 @@ router.post('/', (req, res) => {
     };
     products.push(newProduct);
     writeJSON(productosFilePath, products);
+
+    // Emitir el nuevo producto a través de WebSockets
+    if (req.io) {
+      req.io.emit('new-product', newProduct);  // Emitir el nuevo producto
+    }
+
     res.status(201).json(newProduct);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Ruta PUT /api/products/:pid
-router.put('/:pid', (req, res) => {
-  try {
-    const products = readJSON(productosFilePath);
-    const index = products.findIndex((p) => String(p.id) === String(req.params.pid));
-    if (index === -1) return res.status(404).json({ error: 'Producto no encontrado' });
-
-    products[index] = { ...products[index], ...req.body };
-    writeJSON(productosFilePath, products);
-    res.json(products[index]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -97,6 +75,12 @@ router.delete('/:pid', (req, res) => {
     }
 
     writeJSON(productosFilePath, products);
+
+    // Emitir la eliminación del producto a través de WebSockets
+    if (req.io) {
+      req.io.emit('delete-product', req.params.pid);  // Emitir eliminación de producto
+    }
+
     res.status(204).send();
   } catch (err) {
     res.status(500).json({ error: err.message });

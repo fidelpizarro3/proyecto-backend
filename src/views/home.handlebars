@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Home</title>
+</head>
+<body>
+  <h1>Lista de Productos</h1>
+  <ul id="product-list"></ul>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    socket.on('product-list', (products) => {
+      const productList = document.getElementById('product-list');
+      productList.innerHTML = ''; // Limpiar lista
+      products.forEach(product => {
+        const li = document.createElement('li');
+        li.textContent = `${product.name} - ${product.price}`;
+        productList.appendChild(li);
+      });
+    });
+  </script>
+</body>
+</html>

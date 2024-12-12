@@ -2,9 +2,10 @@
   "name": "proyecto-backend",
   "version": "1.0.0",
   "main": "app.js",
-  "type" : "module",
+  "type": "module",
   "scripts": {
-    "start": "nodemon app.js"
+    "start": "nodemon --now-warnings ./src/app.js",
+    "dev": "nodemon ./src/app.js"
   },
   "keywords": [],
   "author": "",
@@ -12,6 +13,8 @@
   "description": "",
   "dependencies": {
     "express": "^4.21.1",
-    "nodemon": "^3.1.7"
+    "express-handlebars": "^8.0.1",
+    "nodemon": "^3.1.7",
+    "socket.io": "^4.8.1"
   }
 }
