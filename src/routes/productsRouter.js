@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 const router = express.Router();
-const productosFilePath = path.join(process.cwd(), 'src', 'public', 'productos.json');
+const productosFilePath = path.join(process.cwd(), 'src', 'data', 'productos.json');
 
 // Funciones auxiliares
 const readJSON = (filePath) => {

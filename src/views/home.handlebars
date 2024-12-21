@@ -2,25 +2,55 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Home</title>
+  <title>{{title}}</title>
 </head>
 <body>
-  <h1>Lista de Productos</h1>
-  <ul id="product-list"></ul>
+  <h1>{{headerTitle}}</h1>
+
+  <!-- Lista de productos renderizada desde el servidor -->
+  <ul id="product-list">
+    {{#each products}}
+      <li>
+        {{this.name}} - ${{this.price}} - ID: {{this.id}}
+        <button class="delete-btn" data-id="{{this.id}}">Eliminar</button>
+      </li>
+    {{/each}}
+  </ul>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
 
-    socket.on('product-list', (products) => {
+    // Actualización de productos en tiempo real
+    socket.on('update-products', (products) => {
       const productList = document.getElementById('product-list');
-      productList.innerHTML = ''; // Limpiar lista
+      productList.innerHTML = ''; // Limpiar lista actual
       products.forEach(product => {
         const li = document.createElement('li');
-        li.textContent = `${product.name} - ${product.price}`;
+        li.innerHTML = `
+          ${product.name} - $${product.price} - ID: ${product.id}
+          <button class="delete-btn" data-id="${product.id}">Eliminar</button>
+        `;
         productList.appendChild(li);
       });
+
+      // Reasignar eventos a los botones de eliminar
+      addDeleteEventListeners();
     });
+
+    // Función para asignar eventos a los botones de eliminar
+    function addDeleteEventListeners() {
+      const deleteButtons = document.querySelectorAll('.delete-btn');
+      deleteButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+          const productId = parseInt(e.target.dataset.id, 10); // Obtener el ID del producto
+          socket.emit('delete-product', productId); // Emitir el evento para eliminar el producto
+        });
+      });
+    }
+
+    // Asignar eventos a los botones de eliminar al cargar la página
+    addDeleteEventListeners();
   </script>
 </body>
 </html>

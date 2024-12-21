@@ -19,7 +19,7 @@
 
     socket.on('product-list', (products) => {
       const productList = document.getElementById('realtime-product-list');
-      productList.innerHTML = ''; // Limpiar lista
+      productList.innerHTML = ''; 
       products.forEach(product => {
         const li = document.createElement('li');
         li.textContent = `${product.name} - ${product.price}`;
