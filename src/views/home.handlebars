@@ -11,8 +11,9 @@
   <ul id="product-list">
     {{#each products}}
       <li>
-        {{this.name}} - ${{this.price}} - ID: {{this.id}}
-        <button class="delete-btn" data-id="{{this.id}}">Eliminar</button>
+        <a href="/product/{{this._id}}">{{this.name}}</a> - ${{this.price}} - ID: {{this._id}}
+        <button class="add-to-cart-btn" data-id="{{this._id}}">Agregar al carrito</button> <!-- Botón Agregar al carrito -->
+        <button class="delete-btn" data-id="{{this._id}}">Eliminar</button>
       </li>
     {{/each}}
   </ul>
@@ -28,29 +29,53 @@
       products.forEach(product => {
         const li = document.createElement('li');
         li.innerHTML = `
-          ${product.name} - $${product.price} - ID: ${product.id}
-          <button class="delete-btn" data-id="${product.id}">Eliminar</button>
+          <a href="/product/${product._id}">${product.name}</a> - $${product.price} - ID: ${product._id}
+          <button class="add-to-cart-btn" data-id="${product._id}">Agregar al carrito</button> <!-- Botón Agregar al carrito -->
+          <button class="delete-btn" data-id="${product._id}">Eliminar</button>
         `;
         productList.appendChild(li);
       });
 
-      // Reasignar eventos a los botones de eliminar
-      addDeleteEventListeners();
+      // Reasignar eventos a los botones de eliminar y agregar al carrito
+      addEventListeners();
     });
 
-    // Función para asignar eventos a los botones de eliminar
-    function addDeleteEventListeners() {
+    // Función para asignar eventos a los botones de eliminar y agregar al carrito
+    function addEventListeners() {
+      const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+      addToCartButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+          const productId = e.target.dataset.id; // Obtener el ID del producto
+          const cartId = 'YOUR_CART_ID'; // Reemplaza con el ID del carrito del usuario
+          fetch(`/api/carts/${cartId}/products`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ productId })
+          })
+          .then(response => response.json())
+          .then(cart => {
+            console.log('Producto agregado al carrito:', cart);
+          })
+          .catch(error => {
+            console.error('Error agregando al carrito:', error);
+          });
+        });
+      });
+
+      // Función para asignar eventos a los botones de eliminar
       const deleteButtons = document.querySelectorAll('.delete-btn');
       deleteButtons.forEach(button => {
         button.addEventListener('click', (e) => {
-          const productId = parseInt(e.target.dataset.id, 10); // Obtener el ID del producto
+          const productId = e.target.dataset.id;
           socket.emit('delete-product', productId); // Emitir el evento para eliminar el producto
         });
       });
     }
 
-    // Asignar eventos a los botones de eliminar al cargar la página
-    addDeleteEventListeners();
+    // Asignar eventos al cargar la página
+    addEventListeners();
   </script>
 </body>
 </html>

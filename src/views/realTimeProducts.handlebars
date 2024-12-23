@@ -17,16 +17,18 @@
   <script>
     const socket = io();
 
+    // Escuchar el evento 'product-list' para actualizar la lista de productos
     socket.on('product-list', (products) => {
       const productList = document.getElementById('realtime-product-list');
-      productList.innerHTML = ''; 
+      productList.innerHTML = ''; // Limpiar lista antes de agregar productos
       products.forEach(product => {
         const li = document.createElement('li');
-        li.textContent = `${product.name} - ${product.price}`;
+        li.textContent = `${product.name} - $${product.price}`;
         productList.appendChild(li);
       });
     });
 
+    // Escuchar el evento 'product-deleted' para eliminar un producto de la lista
     socket.on('product-deleted', (productId) => {
       const productList = document.getElementById('realtime-product-list');
       const productItems = productList.getElementsByTagName('li');
@@ -37,6 +39,7 @@
       });
     });
 
+    // Enviar un nuevo producto al servidor cuando se envíe el formulario
     document.getElementById('add-product-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const name = document.getElementById('product-name').value;

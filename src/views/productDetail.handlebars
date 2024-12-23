@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Detalle del Producto</title>
+</head>
+<body>
+  <h1>Detalle del Producto</h1>
+
+  <div>
+    <h2>{{product.name}}</h2>
+    <p><strong>Precio:</strong> ${{product.price}}</p>
+    <p><strong>Descripción:</strong> {{product.description}}</p>
+    <p><strong>Código:</strong> {{product.code}}</p> <!-- Si tienes este campo -->
+    <p><strong>ID:</strong> {{product._id}}</p>
+  </div>
+
+  <a href="/">Volver a la lista de productos</a>
+
+  <script src="/socket.io/socket.io.js"></script>
+</body>
+</html>
