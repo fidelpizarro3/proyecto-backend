@@ -64,4 +64,19 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+
+
+router.get('/:id', (req, res) => {
+  const productId = req.params.id;
+  const products = readProducts();
+  const product = products.find((p) => p.id === productId);
+
+  if (!product) {
+      return res.status(404).json({ error: 'Producto no encontrado.' });
+  }
+
+  res.render('productDetails', { product });
+});
+
+
 export default router;

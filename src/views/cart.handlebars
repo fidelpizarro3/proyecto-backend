@@ -1,0 +1,60 @@
+<h1>Carrito de Compras</h1>
+
+<table border="1" cellspacing="0" cellpadding="10">
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Descripción</th>
+      <th>Precio</th>
+      <th>Cantidad</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#if cart.length}}
+      {{#each cart}}
+        <tr>
+          <td>{{this.name}}</td>
+          <td>{{this.description}}</td>
+          <td>${{this.price}}</td>
+          <td>{{this.quantity}}</td>
+          <td>
+            <button onclick="updateQuantity('{{this.id}}', 'increment')">+</button>
+            <button onclick="updateQuantity('{{this.id}}', 'decrement')">-</button>
+          </td>
+        </tr>
+      {{/each}}
+    {{else}}
+      <tr>
+        <td colspan="5">El carrito está vacío.</td>
+      </tr>
+    {{/if}}
+  </tbody>
+</table>
+
+<button onclick="clearCart()">Vaciar Carrito</button>
+<a href="/">Volver a Productos</a>
+
+<script>
+  async function updateQuantity(productId, action) {
+    try {
+      await fetch(`/cart/update/${productId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
+      location.reload();
+    } catch (error) {
+      console.error('Error actualizando cantidad:', error);
+    }
+  }
+
+  async function clearCart() {
+    try {
+      await fetch('/cart/clear', { method: 'DELETE' });
+      location.reload();
+    } catch (error) {
+      console.error('Error vaciando el carrito:', error);
+    }
+  }
+</script>

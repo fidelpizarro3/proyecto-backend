@@ -1,81 +1,41 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>{{title}}</title>
+    <meta charset="UTF-8">
+    <title>Lista de Productos</title>
 </head>
 <body>
-  <h1>{{headerTitle}}</h1>
+    <h1>Lista de Productos</h1>
 
-  <!-- Lista de productos renderizada desde el servidor -->
-  <ul id="product-list">
-    {{#each products}}
-      <li>
-        <a href="/product/{{this._id}}">{{this.name}}</a> - ${{this.price}} - ID: {{this._id}}
-        <button class="add-to-cart-btn" data-id="{{this._id}}">Agregar al carrito</button> <!-- Botón Agregar al carrito -->
-        <button class="delete-btn" data-id="{{this._id}}">Eliminar</button>
-      </li>
-    {{/each}}
-  </ul>
+    <ul>
+        {{#each products}}
+        <li>
+            <h3>{{this.name}}</h3>
+            <p>Precio: ${{this.price}}</p>
+            <button onclick="addToCart('{{this._id}}')">Agregar al carrito</button>
+            <button onclick="viewDetails('{{this._id}}')">Ver Detalles</button>
+        </li>
+        {{/each}}
+    </ul>
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script>
-    const socket = io();
+    <script>
+        const socket = io();
 
-    // Actualización de productos en tiempo real
-    socket.on('update-products', (products) => {
-      const productList = document.getElementById('product-list');
-      productList.innerHTML = ''; // Limpiar lista actual
-      products.forEach(product => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <a href="/product/${product._id}">${product.name}</a> - $${product.price} - ID: ${product._id}
-          <button class="add-to-cart-btn" data-id="${product._id}">Agregar al carrito</button> <!-- Botón Agregar al carrito -->
-          <button class="delete-btn" data-id="${product._id}">Eliminar</button>
-        `;
-        productList.appendChild(li);
-      });
+        function addToCart(productId) {
+            fetch(`/api/carts/default-cart/products/${productId}`, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' } 
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    alert('Producto agregado al carrito.');
+                })
+                .catch((error) => console.error('Error:', error));
+        }
 
-      // Reasignar eventos a los botones de eliminar y agregar al carrito
-      addEventListeners();
-    });
-
-    // Función para asignar eventos a los botones de eliminar y agregar al carrito
-    function addEventListeners() {
-      const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
-      addToCartButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-          const productId = e.target.dataset.id; // Obtener el ID del producto
-          const cartId = 'YOUR_CART_ID'; // Reemplaza con el ID del carrito del usuario
-          fetch(`/api/carts/${cartId}/products`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ productId })
-          })
-          .then(response => response.json())
-          .then(cart => {
-            console.log('Producto agregado al carrito:', cart);
-          })
-          .catch(error => {
-            console.error('Error agregando al carrito:', error);
-          });
-        });
-      });
-
-      // Función para asignar eventos a los botones de eliminar
-      const deleteButtons = document.querySelectorAll('.delete-btn');
-      deleteButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-          const productId = e.target.dataset.id;
-          socket.emit('delete-product', productId); // Emitir el evento para eliminar el producto
-        });
-      });
-    }
-
-    // Asignar eventos al cargar la página
-    addEventListeners();
-  </script>
+        function viewDetails(productId) {
+            window.location.href = `/product/${productId}`;
+        }
+    </script>
 </body>
 </html>

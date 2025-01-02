@@ -70,8 +70,12 @@
   ul {
     list-style: none;
     padding: 0;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
   }
-  
   li {
     background-color: #ffffff;
     margin: 10px 0;

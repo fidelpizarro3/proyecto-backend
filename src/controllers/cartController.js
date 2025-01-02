@@ -1,9 +1,12 @@
-import Cart from '../models/cartModel.js';
+
+import Cart from '../models/cartModels.js';
+
+console.log(Cart);  // Esto debería imprimir la clase Cart o el objeto del modelo
 
 export const getCart = async (req, res) => {
   try {
     const cart = await Cart.findOne().populate('products.product');
-    if (!cart) return res.status(404).json({ message: 'Carrito vacío' });
+    if (!cart) return res.status(404).json({ message: 'Carrito vacio' });
     res.status(200).json(cart);
   } catch (error) {
     res.status(500).json({ message: 'Error al obtener carrito', error });
