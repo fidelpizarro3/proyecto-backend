@@ -75,3 +75,27 @@ app.get('/cart', async (req, res) => {
     res.status(500).send('Error interno del servidor');
   }
 });
+
+app.get('/detalles/:id', async (req, res) => {
+  try {
+      const product = await mongoose.model('Product').findById(req.params.id);
+
+      if (!product) {
+          return res.status(404).send('Producto no encontrado.');
+      }
+
+      res.render('details', {
+          title: `Detalles de ${product.name}`,
+          product: {
+              name: product.name,
+              price: product.price,
+              description: product.description,
+              imageUrl: product.imageUrl || '/default-image.jpg', // Si tienes una imagen, usa esto
+          },
+      });
+  } catch (error) {
+      console.error('Error obteniendo detalles del producto:', error);
+      res.status(500).send('Error interno del servidor.');
+  }
+});
+

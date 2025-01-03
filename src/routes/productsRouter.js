@@ -3,7 +3,7 @@ import Product from '../models/productModel.js';
 
 const router = express.Router();
 
-// Ruta GET /api/products/
+// Ruta GET /api/products/ - Lista todos los productos con un límite opcional
 router.get('/', async (req, res) => {
   try {
     const products = await Product.find();
@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Ruta GET /api/products/:id
+// Ruta GET /api/products/:id - Devuelve los detalles de un producto en formato JSON
 router.get('/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -27,11 +27,11 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Ruta POST /api/products/
+// Ruta POST /api/products/ - Crea un nuevo producto
 router.post('/', async (req, res) => {
   try {
-    const { code, name, price, description } = req.body;
-    const newProduct = new Product({code, name, price, description });
+    const { code, name, price, description, imageUrl } = req.body;
+    const newProduct = new Product({ code, name, price, description, imageUrl });
     await newProduct.save();
 
     // Emitir el nuevo producto a través de WebSockets
@@ -45,7 +45,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Ruta DELETE /api/products/:id
+// Ruta DELETE /api/products/:id - Elimina un producto
 router.delete('/:id', async (req, res) => {
   try {
     const deletedProduct = await Product.findByIdAndDelete(req.params.id);
@@ -64,19 +64,18 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-
-
-router.get('/:id', (req, res) => {
-  const productId = req.params.id;
-  const products = readProducts();
-  const product = products.find((p) => p.id === productId);
-
-  if (!product) {
-      return res.status(404).json({ error: 'Producto no encontrado.' });
+// Nueva ruta GET /detalles/:id - Renderiza los detalles del producto en una vista
+router.get('/detalles/:id', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).send('Producto no encontrado');
+    }
+    res.render('details', { product });
+  } catch (err) {
+    console.error('Error obteniendo detalles del producto:', err);
+    res.status(500).send('Error interno del servidor');
   }
-
-  res.render('productDetails', { product });
 });
-
 
 export default router;

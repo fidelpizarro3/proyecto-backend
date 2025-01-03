@@ -38,23 +38,25 @@
 <script>
   async function updateQuantity(productId, action) {
     try {
-      await fetch(`/cart/update/${productId}`, {
+      const response = await fetch(`/api/carts/update/${productId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action }),
       });
-      location.reload();
+      if (response.ok) location.reload();
+      else console.error('Error actualizando cantidad');
     } catch (error) {
-      console.error('Error actualizando cantidad:', error);
+      console.error('Error:', error);
     }
   }
 
   async function clearCart() {
     try {
-      await fetch('/cart/clear', { method: 'DELETE' });
-      location.reload();
+      const response = await fetch('/api/carts/clear', { method: 'DELETE' });
+      if (response.ok) location.reload();
+      else console.error('Error vaciando carrito');
     } catch (error) {
-      console.error('Error vaciando el carrito:', error);
+      console.error('Error:', error);
     }
   }
 </script>

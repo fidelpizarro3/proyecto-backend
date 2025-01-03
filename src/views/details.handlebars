@@ -2,21 +2,18 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Lista de Productos</title>
+    <title>Detalles del Producto</title>
 </head>
 <body>
-    <h1>Lista de Productos</h1>
-
-    <ul>
-        {{#each products}}
-        <li>
-            <h3>{{this.name}}</h3>
-            <p>Precio: ${{this.price}}</p>
-            <button onclick="addToCart('{{this._id}}')">Agregar al carrito</button>
-            <button onclick="viewDetails('{{this._id}}')">Ver Detalles</button>
-        </li>
-        {{/each}}
-    </ul>
+    <h1>Detalles del Producto</h1>
+    <div>
+        <h2>{{product.name}}</h2>
+        <p>Precio: ${{product.price}}</p>
+        <p>Descripción: {{product.description}}</p>
+        <img src="{{product.imageUrl}}" alt="Imagen de {{product.name}}" style="width:300px; height:auto;">
+        <button onclick="addToCart('{{product._id}}')">Agregar al carrito</button>
+    </div>
+    <a href="/">Volver a Productos</a>
 
     <script>
         const socket = io();
@@ -31,10 +28,6 @@
                     alert('Producto agregado al carrito.');
                 })
                 .catch((error) => console.error('Error:', error));
-        }
-
-        function viewDetails(productId) {
-            window.location.href = `/detalles/${productId}`;
         }
     </script>
 </body>
