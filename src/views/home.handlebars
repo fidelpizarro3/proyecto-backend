@@ -18,6 +18,9 @@
         {{/each}}
     </ul>
 
+    <!-- Botón para ver carrito -->
+    <button class="verCarrito" onclick="viewCart()">Ver Carrito</button>
+
     <script>
         const socket = io();
 
@@ -35,6 +38,10 @@
 
         function viewDetails(productId) {
             window.location.href = `/detalles/${productId}`;
+        }
+
+        function viewCart() {
+            window.location.href = '/cart';
         }
     </script>
 </body>

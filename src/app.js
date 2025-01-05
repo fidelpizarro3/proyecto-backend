@@ -6,6 +6,7 @@ import { join } from 'path';
 import { engine } from 'express-handlebars';
 import mongoose from 'mongoose';
 
+
 const app = express();
 
 // Configuración de Handlebars

@@ -30,16 +30,40 @@ router.get('/:id', async (req, res) => {
 // Ruta POST /api/products/ - Crea un nuevo producto
 router.post('/', async (req, res) => {
   try {
-    const { code, name, price, description, imageUrl } = req.body;
-    const newProduct = new Product({ code, name, price, description, imageUrl });
+    const { code, name, price, description, imageUrl, stock, category } = req.body;
+    if (!stock || !category) {
+      return res.status(400).json({ error: 'Faltan propiedades obligatorias: stock y category.' });
+    }
+
+    const newProduct = new Product({ code, name, price, description, imageUrl, stock, category });
     await newProduct.save();
 
     // Emitir el nuevo producto a través de WebSockets
     if (req.io) {
-      req.io.emit('new-product', newProduct); // Emitir el nuevo producto
+      req.io.emit('new-product', newProduct);
     }
 
     res.status(201).json(newProduct);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Ruta PUT /api/products/:id - Actualiza un producto existente
+router.put('/:id', async (req, res) => {
+  try {
+    const { name, price, description, imageUrl, stock, category } = req.body;
+    const updatedProduct = await Product.findByIdAndUpdate(
+      req.params.id,
+      { name, price, description, imageUrl, stock, category },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedProduct) {
+      return res.status(404).json({ error: 'Producto no encontrado.' });
+    }
+
+    res.json(updatedProduct);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -55,26 +79,12 @@ router.delete('/:id', async (req, res) => {
 
     // Emitir la eliminación del producto a través de WebSockets
     if (req.io) {
-      req.io.emit('delete-product', req.params.id); // Emitir eliminación de producto
+      req.io.emit('delete-product', req.params.id);
     }
 
     res.status(204).send();
   } catch (err) {
     res.status(500).json({ error: err.message });
-  }
-});
-
-// Nueva ruta GET /detalles/:id - Renderiza los detalles del producto en una vista
-router.get('/detalles/:id', async (req, res) => {
-  try {
-    const product = await Product.findById(req.params.id);
-    if (!product) {
-      return res.status(404).send('Producto no encontrado');
-    }
-    res.render('details', { product });
-  } catch (err) {
-    console.error('Error obteniendo detalles del producto:', err);
-    res.status(500).send('Error interno del servidor');
   }
 });
 
